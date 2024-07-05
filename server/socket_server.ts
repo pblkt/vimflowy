@@ -5,7 +5,6 @@ import * as WebSocket from 'ws';
 import DataBackend, { InMemory } from '../src/shared/data_backend';
 import logger from '../src/shared/utils/logger';
 
-import { SQLiteBackend } from './data_backends';
 
 type SocketServerOptions = {
   db?: string,
@@ -25,22 +24,8 @@ export default function makeSocketServer(server: http.Server, options: SocketSer
       return dbs[docname];
     }
     let db: DataBackend;
-    if (options.db === 'sqlite') {
-      let filename;
-      if (options.dbfolder) {
-        filename = `${options.dbfolder}/${docname || 'vimflowy'}.sqlite`;
-        logger.info('Using sqlite database: ', filename);
-      } else {
-        filename = ':memory:';
-        logger.warn('Using in-memory sqlite database');
-      }
-      const sql_db = new SQLiteBackend();
-      await sql_db.init(filename);
-      db = sql_db;
-    } else {
-      logger.info('Using in-memory database');
-      db = new InMemory();
-    }
+    logger.info('Using in-memory database');
+    db = new InMemory();
     dbs[docname] = db;
     return db;
   }

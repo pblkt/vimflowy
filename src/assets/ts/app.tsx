@@ -31,7 +31,7 @@ import { ClientStore, DocumentStore } from './datastore';
 import { SynchronousInMemory, InMemory } from '../../shared/data_backend';
 import {
   BackendType, SynchronousLocalStorageBackend,
-  LocalStorageBackend, FirebaseBackend, ClientSocketBackend, IndexedDBBackend
+  LocalStorageBackend, IndexedDBBackend
 } from './data_backend';
 import Document from './document';
 import { PluginsManager } from './plugins';
@@ -62,16 +62,16 @@ ReactDOM.render(
     justifyContent: 'center',
     height: '100%',
   }}>
-    <div style={{ flexGrow: 3 }}/>
+    <div style={{ flexGrow: 3 }} />
     <div style={{
       textAlign: 'center',
       alignSelf: 'center',
       color: '#999',
     }}>
-      <i className='fa fa-5x fa-spin fa-spinner'/>
+      <i className='fa fa-5x fa-spin fa-spinner' />
       <p>Loading... this can take a minute the first time</p>
     </div>
-    <div style={{ flexGrow: 8 }}/>
+    <div style={{ flexGrow: 8 }} />
   </div>,
   appEl
 );
@@ -111,119 +111,23 @@ $(document).ready(async () => {
     backend_type = 'inmemory';
   } else {
     clientStore = new ClientStore(new SynchronousLocalStorageBackend(), docname);
-    if (SERVER_CONFIG.socketserver) {
-      backend_type = 'socketserver';
-    } else {
-      backend_type = clientStore.getDocSetting('dataSource');
-    }
+
+    backend_type = clientStore.getDocSetting('dataSource');
+
   }
 
   const config: Config = vimConfig;
 
   function getLocalStore(): DocumentStore {
-     return new DocumentStore(new IndexedDBBackend(docname), docname);
+    return new DocumentStore(new IndexedDBBackend(docname), docname);
   }
 
-  async function getFirebaseStore(): Promise<DocumentStore> {
-    const firebaseId = clientStore.getDocSetting('firebaseId');
-    const firebaseApiKey = clientStore.getDocSetting('firebaseApiKey');
-    const firebaseUserEmail = clientStore.getDocSetting('firebaseUserEmail');
-    const firebaseUserPassword = clientStore.getDocSetting('firebaseUserPassword');
 
-    if (!firebaseId) {
-      throw new Error('No firebase ID found');
-    }
-    if (!firebaseApiKey) {
-      throw new Error('No firebase API key found');
-    }
-    const fb_backend = new FirebaseBackend(docname, firebaseId, firebaseApiKey);
-    const dStore = new DocumentStore(fb_backend, docname);
-    await fb_backend.init(firebaseUserEmail || '', firebaseUserPassword || '');
 
-    logger.info(`Successfully initialized firebase connection: ${firebaseId}`);
-    return dStore;
-  }
 
-  async function getSocketServerStore(): Promise<DocumentStore> {
-    let socketServerHost;
-    let socketServerDocument;
-    let socketServerPassword;
-    if (SERVER_CONFIG.socketserver) { // server is fixed!
-      socketServerHost = window.location.origin.replace(/^http/, 'ws');
-      socketServerDocument = docname;
-      socketServerPassword = clientStore.getDocSetting('socketServerPassword');
-    } else {
-      socketServerHost = clientStore.getDocSetting('socketServerHost');
-      socketServerDocument = clientStore.getDocSetting('socketServerDocument');
-      socketServerPassword = clientStore.getDocSetting('socketServerPassword');
-    }
 
-    if (!socketServerHost) {
-      throw new Error('No socket server host found');
-    }
-    const socket_backend = new ClientSocketBackend();
-    // NOTE: we don't pass docname to DocumentStore since we want keys
-    // to not have prefixes
-    const dStore = new DocumentStore(socket_backend);
-    while (true) {
-      try {
-        await socket_backend.init(
-          socketServerHost, socketServerPassword || '', socketServerDocument || '');
-        break;
-      } catch (e) {
-        if (e === 'Wrong password!') {
-          socketServerPassword = prompt(
-            socketServerPassword ?
-              'Password incorrect!  Please try again: ' :
-              'Please enter the password',
-            '');
-        } else {
-          throw e;
-        }
-      }
-    }
-    clientStore.setDocSetting('socketServerPassword', socketServerPassword);
-    logger.info(`Successfully initialized socked connection: ${socketServerHost}`);
-    return dStore;
-  }
-
-  if (backend_type === 'firebase') {
-    try {
-      docStore = await getFirebaseStore();
-    } catch (e) {
-      alert(`
-        Error loading firebase datastore:
-
-        ${e.message}
-
-        ${e.stack}
-
-        Falling back to localStorage default.
-      `);
-
-      docStore = getLocalStore();
-      backend_type = 'local';
-    }
-  } else if (backend_type === 'inmemory') {
+  if (backend_type === 'inmemory') {
     docStore = new DocumentStore(new InMemory());
-  } else if (backend_type === 'socketserver') {
-    try {
-      docStore = await getSocketServerStore();
-    } catch (e) {
-      alert(`
-        Error loading socket server datastore:
-
-        ${e.message}
-
-        ${e.stack}
-
-        Falling back to localStorage default.
-      `);
-
-      clientStore.setDocSetting('socketServerPassword', '');
-      docStore = getLocalStore();
-      backend_type = 'local';
-    }
   } else {
     docStore = getLocalStore();
     backend_type = 'local';
@@ -292,7 +196,7 @@ $(document).ready(async () => {
     cursorPath: cursorPath,
     showMessage: (() => {
       let messageDivTimeout: null | number = null;
-      return (message: string, options: {time?: number, text_class?: string} = {}) => {
+      return (message: string, options: { time?: number, text_class?: string } = {}) => {
         const { time = 5000, text_class = '' } = options;
 
         logger.info(`Showing message: ${message}`);
@@ -405,13 +309,16 @@ $(document).ready(async () => {
         const formatted = clientStore.getClientSetting('formattedCopy');
         const contents: Array<string> = [];
         const richContents: Array<string> = ['<ul>'];
-        const cache: {[id: number]: SerializedBlock} = {};
+        const cache: { [id: number]: SerializedBlock } = {};
         const recurse = (p: any, depth: number) => {
-          if (typeof p === 'string') { throw new Error('Expected non-pretty serialization');
-          } else if (p.clone) { p = cache[p.clone];
+          if (typeof p === 'string') {
+            throw new Error('Expected non-pretty serialization');
+          } else if (p.clone) {
+            p = cache[p.clone];
           } else { cache[p.id] = p; } // in case it's cloned
 
-          if (formatted) { contents.push(' '.repeat(depth * 4) + (p.collapsed ? '+ ' : '- ') + p.text);
+          if (formatted) {
+            contents.push(' '.repeat(depth * 4) + (p.collapsed ? '+ ' : '- ') + p.text);
           } else { contents.push(p.text); }
           richContents.push('<li>' + p.text + '</li>');
 

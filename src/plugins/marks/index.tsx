@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import * as React from 'react'; // tslint:disable-line no-unused-variable
 
 import * as errors from '../../shared/utils/errors';
@@ -12,7 +12,7 @@ import Session, { InMemorySession } from '../../assets/ts/session';
 import LineComponent from '../../assets/ts/components/line';
 import Mutation from '../../assets/ts/mutations';
 import Path from '../../assets/ts/path';
-import { Col, Row } from '../../assets/ts/types';
+import { Row } from '../../assets/ts/types';
 import { getStyles } from '../../assets/ts/themes';
 
 import { SINGLE_LINE_MOTIONS } from '../../assets/ts/definitions/motions';
@@ -220,19 +220,27 @@ export class MarksPlugin {
         return async cursor => {
           const line = await session.document.getText(cursor.row);
           const matches = that.getMarkMatches(line);
-          let mark = '';
-          matches.map((pos) => {
-            if (cursor.col >= pos[0] && cursor.col <= pos[1]) {
-              mark = that.parseMarkMatch(line.slice(pos[0], pos[1]));
-            }
-          });
+          let mark =  matches.find((pos) => 
+            cursor.col >= pos[0] && cursor.col <= pos[1] 
+          );
           if (!mark) {
             session.showMessage(`Cursor should be over a mark link`);
             return;
           }
+          let parsedMark = that.parseMarkMatch(line.slice(mark[0], mark[1]));
+          // let mark = '';
+          // matches.map((pos) => {
+          //   if (cursor.col >= pos[0] && cursor.col <= pos[1]) {
+          //     mark = that.parseMarkMatch(line.slice(pos[0], pos[1]));
+          //   }
+          // });
+          // if (!mark) {
+          //   session.showMessage(`Cursor should be over a mark link`);
+          //   return;
+          // }
           const allMarks = await that.listMarks();
-          if (mark in allMarks) {
-            const path = allMarks[mark];
+          if (parsedMark in allMarks) {
+            const path = allMarks[parsedMark];
             await session.zoomInto(path);
           } else {
             session.showMessage(`No mark ${mark} to go to!`);
@@ -445,7 +453,7 @@ export class MarksPlugin {
       ) => {
         if (this.session.mode === 'NORMAL') {
           const matches = this.getMarkMatches(token.text);
-          matches.map(pos => {
+          matches.forEach(pos => {
             let start = pos[0];
             let end = pos[1];
             const mark = this.parseMarkMatch(token.text.slice(start, end));

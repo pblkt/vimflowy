@@ -20,6 +20,7 @@ It maintains custom logic for this, for each mode.
 
 import EventEmitter from './utils/eventEmitter';
 import logger from '../../shared/utils/logger';
+import QueueStoppedError from './utils/queue';
 import Queue from './utils/queue';
 import Session from './session';
 import KeyBindings, { KeyBindingsTree } from './keyBindings';
@@ -123,7 +124,7 @@ export default class KeyHandler extends EventEmitter {
       await this._processKeys(recordKeyStream);
     } catch (e) {
       // console.log('caught', e, e.name);
-      if (e.name === 'QueueStoppedError') {
+      if (e instanceof QueueStoppedError) {
         // console.log('failed to fully play', recording);
       } else {
         throw e;

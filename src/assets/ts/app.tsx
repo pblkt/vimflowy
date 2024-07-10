@@ -9,7 +9,7 @@ Initialize the main page.  Rather messy logic for a bunch of stuff:
 */
 
 import $ from 'jquery';
-import * as React from 'react'; // tslint:disable-line no-unused-variable
+import React from 'react'; // tslint:disable-line no-unused-variable
 import * as ReactDOM from 'react-dom';
 
 import 'font-awesome/css/font-awesome.min.css';
@@ -29,17 +29,14 @@ import KeyHandler from './keyHandler';
 import KeyMappings from './keyMappings';
 import { ClientStore, DocumentStore } from './datastore';
 import { SynchronousInMemory, InMemory } from '../../shared/data_backend';
-import {
-  BackendType, SynchronousLocalStorageBackend,
-  LocalStorageBackend, IndexedDBBackend
-} from './data_backend';
+import { BackendType, SynchronousLocalStorageBackend, IndexedDBBackend } from './data_backend';
 import Document from './document';
 import { PluginsManager } from './plugins';
 import Path from './path';
 import Session from './session';
 import Config from './config';
 import vimConfig from './configurations/vim';
-import { SERVER_CONFIG } from './constants';
+
 
 import keyDefinitions from './keyDefinitions';
 // load actual definitions
@@ -76,7 +73,7 @@ ReactDOM.render(
   appEl
 );
 
-$(document).ready(async () => {
+$(async () => {
   let docname: string = browser_utils.getParameterByName('doc') || '';
   if (docname !== '') { document.title = `${docname} - Vimflowy`; }
 
@@ -174,7 +171,7 @@ $(document).ready(async () => {
     }
   }
   if (!viewRoot) {
-    viewRoot = Path.loadFromAncestry(await clientStore.getLastViewRoot());
+    viewRoot = Path.loadFromAncestry(clientStore.getLastViewRoot());
   }
   let cursorPath;
   if (viewRoot.isRoot() || !await doc.isValidPath(viewRoot)) {
@@ -349,7 +346,7 @@ $(document).ready(async () => {
   session.on('importFinished', renderMain); // fire and forget
 
   session.on('changeViewRoot', async (path: Path) => {
-    await clientStore.setLastViewRoot(path.getAncestry());
+    clientStore.setLastViewRoot(path.getAncestry());
     window.location.hash = `#${path.row}`;
   });
 
@@ -379,13 +376,13 @@ $(document).ready(async () => {
 
   // needed for safari
   const $pasteHack = $('#paste-hack');
-  $pasteHack.focus();
+  $pasteHack.trigger("focus");
   $(document).on('click', function() {
     // if settings menu is up, we don't want to blur (the dropdowns need focus)
     if (session.mode === 'SETTINGS') { return; }
     // if user is trying to copy, we don't want to blur
     if (window.getSelection().toString()) { return; }
-    $pasteHack.focus();
+    $pasteHack.trigger("focus");
   });
 
   $(document).on('paste', async (e) => {
@@ -439,7 +436,7 @@ function copyToClipboard(text: string, richText?: string) {
   if (window.clipboardData && window.clipboardData.setData) {
     // IE specific code path to prevent textarea being shown while dialog is visible.
     return window.clipboardData.setData('Text', text);
-  } else if (document.queryCommandSupported && document.queryCommandSupported('copy')) {
+  } else if (navigator.clipboard) {
     const textarea = document.createElement('textarea');
     textarea.textContent = text;
     textarea.style.position = 'fixed';  // Prevent scrolling to bottom of page in MS Edge.
@@ -449,7 +446,7 @@ function copyToClipboard(text: string, richText?: string) {
 
     try {
       document.addEventListener('copy', listener);
-      return document.execCommand('copy');  // Security exception may be thrown by some browsers.
+      return navigator.clipboard.writeText(text);  // Security exception may be thrown by some browsers.
     } catch (ex) {
       console.warn('Copy to clipboard failed.', ex);
       return false;

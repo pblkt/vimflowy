@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 // import 'core-js/shim';
 
 import * as errors from '../../shared/utils/errors';
@@ -257,7 +257,7 @@ export default class Document extends EventEmitter {
 
     const [
       line, collapsed, children, parents, pluginData
-    ] = await Promise.all<Line, boolean, Array<Row>, Array<Row>, any>([
+    ] = await Promise.all([
       this.store.getLine(row),
       this.store.getCollapsed(row),
       this.store.getChildren(row),
@@ -725,10 +725,10 @@ export default class Document extends EventEmitter {
       yield path;
       const children = await that.getChildren(path);
       for (let i = 0; i < children.length; i++) {
-        yield* await helper(children[i]);
+        yield* helper(children[i]);
       }
     }
-    yield* await helper(root);
+    yield* helper(root);
   }
 
   public async search(root: Path, query: string, options: SearchOptions = {}) {

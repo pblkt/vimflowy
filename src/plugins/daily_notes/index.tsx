@@ -1,5 +1,5 @@
-import * as React from 'react'; // tslint:disable-line no-unused-variable
-import * as _ from 'lodash';
+import React from 'react'; 
+import _ from 'lodash';
 import { registerPlugin, PluginApi } from '../../assets/ts/plugins';
 import { Logger } from '../../shared/utils/logger';
 import Path from '../../assets/ts/path';
@@ -380,7 +380,7 @@ class DailyNotesPlugin {
 
   private async getDailyNotesRoot() {
     this.log('getDailyNotesRoot');
-    if (this.dailyNotesRoot && this.api.session.document.isValidPath(this.dailyNotesRoot!)) {
+    if (this.dailyNotesRoot && await this.api.session.document.isValidPath(this.dailyNotesRoot!)) {
       this.log('getDailyNotesRoot from cache');
       return this.dailyNotesRoot!;
     } else {
@@ -415,10 +415,10 @@ class DailyNotesPlugin {
       yield path;
       const children = await that.getChildren(path);
       for (let i = 0; i < children.length; i++) {
-        yield* await helper(children[i]);
+        yield* helper(children[i]);
       }
     }
-    yield* await helper(root);
+    yield* helper(root);
   }
 
   public async getChildren(parent_path: Path): Promise<Array<Path>> {

@@ -13,7 +13,6 @@ export default class Queue<T> {
   private queue: Array<T>;
   private resolveNext: ((val: T) => void) | null;
   private nextProm: Promise<T> | null;
-  private id: number;
   private stopped: boolean;
 
   constructor(vals: Array<T> = []) {
@@ -21,7 +20,6 @@ export default class Queue<T> {
     this.resolveNext = null;
     this.nextProm = null;
     vals.forEach((val) => this.enqueue(val));
-    this.id = Math.random();
     this.stopped = false;
   }
 
